@@ -1,0 +1,38 @@
+include:
+    - template: Terraform.latest.gitlab-ci.yml
+stages:
+  - .pre
+  - validate
+  - test
+  - build
+  - deploy
+  - cleanup
+    
+build-react:
+  stage: .pre
+  image: node:latest
+  script:
+    - echo "this is react build part"
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - build
+
+test-job:
+  stage: test
+  image: node:latest
+  script:
+    - npm install react-scripts
+    - npm test -- --watchAll=false --coverage --collectCoverageFrom=src/modules/**/*.{js,jsx}
+  dependencies: 
+    - build-react
+
+deploy:  
+  dependencies:
+    - build    
+    - build-react
+
+destroy-build:
+  extends: .terraform:destroy
+
